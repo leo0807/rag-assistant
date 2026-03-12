@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface Props {
     onUploadComplete: (fileNames: string[]) => void;
@@ -182,22 +183,30 @@ export default function UploadPanel({ onUploadComplete }: Props) {
             }
 
             {/* State Info */}
-            {
-                uploadState.message && (
-                    <div style={{
-                        marginTop: '0.8rem',
-                        fontSize: '0.75rem',
-                        fontFamily: 'DM Mono, monospace',
-                        color: statusColor,
-                        textAlign: 'center',
-                    }}>
-                        {uploadState.status === 'uploading' && '⟳ '}
-                        {uploadState.status === 'success' && '✓ '}
-                        {uploadState.status === 'error' && '⚠ '}
-                        {uploadState.message}
-                    </div>
-                )
-            }
+            {uploadState.message && (
+                <div style={{
+                    marginTop: '0.8rem',
+                    fontSize: '0.75rem',
+                    fontFamily: 'DM Mono, monospace',
+                    color: statusColor,
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem',
+                }}>
+                    {uploadState.status === 'uploading' && (
+                        <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                    )}
+                    {uploadState.status === 'success' && <CheckCircle size={14} />}
+                    {uploadState.status === 'error' && <AlertCircle size={14} />}
+                    {uploadState.message}
+                </div>
+            )}
+
+            <style>{`
+                @keyframes spin { to { transform: rotate(360deg); } }
+            `}</style>
         </div >
     )
 }
