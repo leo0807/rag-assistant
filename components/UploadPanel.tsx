@@ -42,10 +42,16 @@ export default function UploadPanel({ onUploadComplete }: Props) {
                 method: 'POST',
                 body: formData,
             });
-            if (!res.ok) throw new Error('Upload failed');
             const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            setUploadState({
+                status: 'success',
+                message: `${data.filesProcessed} file(s) · ${data.chunksStored} chunks stored`,
+            });
+
+            // 通知父组件上传完成，传入文件名列表
             onUploadComplete(files.map(f => f.name));
-            setFiles([]);
         } catch (error) {
             setUploadState({ status: 'error', message: error instanceof Error ? error.message : 'Upload failed' });
         }

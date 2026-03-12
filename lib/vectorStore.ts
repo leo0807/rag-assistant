@@ -1,47 +1,46 @@
-import { ChromaClient, Collection } from "chromadb";
+import { ChromaClient } from 'chromadb';
 
 let client: ChromaClient | null = null;
-let collection: Collection | null = null;
 
-const COLLECTION_NAME = "rag-assistant";
+const COLLECTION_NAME = 'rag_documents';
 
 function getClient(): ChromaClient {
     if (!client) {
-        client = new ChromaClient({ path: "http://localhost:8000" });
+        client = new ChromaClient({
+            host: 'localhost',
+            port: 8000,
+            ssl: false,
+        });
     }
     return client;
 }
 
-export async function getCollection(): Promise<Collection> {
-    if (collection) return collection;
+export async function getCollection() {
     const chroma = getClient();
-    collection = await chroma.getOrCreateCollection({
+    return await chroma.getOrCreateCollection({
         name: COLLECTION_NAME,
         metadata: { 'hnsw:space': 'cosine' },
+        // 禁用默认 embedding function，我们自己提供向量
+        embeddingFunction: null as any,
     });
-    return collection;
 }
 
 export async function addDocuments(params: {
-    ids: string[],
-    embeddings: number[][],
-    documents?: string[],
-    metadatas?: Record<string, string>[],
+    ids: string[];
+    embeddings: number[][];
+    documents: string[];
+    metadatas: Record<string, string>[];
 }) {
-    const collection = await getCollection();
-    await collection.add(params);
+    const col = await getCollection();
+    await col.add(params);
 }
 
 export async function queryDocuments(params: {
-    embedding: number[],
-    nResults: number,
-}): Promise<{
-    documents: string[];
-    metadatas: Record<string, string>[];
-    distances: number[];
-}> {
-    const collection = await getCollection();
-    const results = await collection.query({
+    embedding: number[];
+    nResults: number;
+}): Promise<{ documents: string[]; metadatas: Record<string, string>[]; distances: number[] }> {
+    const col = await getCollection();
+    const results = await col.query({
         queryEmbeddings: [params.embedding],
         nResults: params.nResults,
     });
@@ -56,5 +55,4 @@ export async function queryDocuments(params: {
 export async function deleteCollection(): Promise<void> {
     const chroma = getClient();
     await chroma.deleteCollection({ name: COLLECTION_NAME });
-    collection = null;
 }
