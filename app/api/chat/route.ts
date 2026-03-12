@@ -23,9 +23,9 @@ export async function POST(req: Request) {
             embedding: queryEmbedding,
             nResults: 5,
         });
-        // 3. 过滤掉相似度太低的结果（distance > 0.5 说明关联性很弱）
+        // 3. 过滤掉相似度太低的结果（distance > 0.9 说明关联性很弱）
         //    cosine distance: 0 = 完全相同，1 = 完全无关
-        const relevantDocs = documents.filter((_, i) => distances[i] < 0.5);
+        const relevantDocs = documents.filter((_, i) => distances[i] < 0.9);
 
         if (!relevantDocs.length) {
             return Response.json({
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
         // 8. 整理来源信息返回给前端
         //    前端会把这些显示成引用卡片
         const sources = metadatas
-            .filter((_, i) => distances[i] < 0.5)
+            .filter((_, i) => distances[i] < 0.9)
             .map((meta, i) => ({
                 source: meta.source,
                 excerpt: documents[i].slice(0, 150) + '...', // 只显示前150字

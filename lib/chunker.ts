@@ -4,7 +4,7 @@ export interface Chunk {
     source: string;
 }
 
-export function chunkText(text: string, source: string, chunkSize = 300, overlap = 30): Chunk[] {
+export function chunkText(text: string, source: string, chunkSize = 800, overlap = 50): Chunk[] {
     const sentences = text.split(/(?<=[.!?])\s+/);
     const chunks: Chunk[] = [];
     let current = "";

@@ -4,6 +4,8 @@ import { embedTexts } from "@/lib/embeddings";
 import { addDocuments } from "@/lib/vectorStore";
 import { randomUUID } from "crypto";
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 export async function POST(req: Request) {
     try {
         const formData = await req.formData();
@@ -17,6 +19,9 @@ export async function POST(req: Request) {
         let totalChunks = 0;
 
         for (const file of files) {
+            if (file.size > MAX_FILE_SIZE) {
+                return Response.json({ error: `File "${file.name}" exceeds 5MB limit` }, { status: 400 });
+            }
             // Extract text from files
             const text = await parseFile(file);
             // 把长文本切成小块，每块约500字
