@@ -275,3 +275,18 @@ KeyError: '_type'
 [36mDEBUG[0m:    [12-03-2026 19:48:06] Collection rag_documents already exists, returning existing collection.
 [32mINFO[0m:     [12-03-2026 19:48:06] ::1:53122 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
 [32mINFO[0m:     [12-03-2026 19:48:06] ::1:53123 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/fb2501bd-afe9-4753-9899-d5252d8988dc/query HTTP/1.1" 200
+[32mINFO[0m:     [12-03-2026 20:14:03] Shutting down
+[32mINFO[0m:     [12-03-2026 20:14:03] Waiting for application shutdown.
+[36mDEBUG[0m:    [12-03-2026 20:14:03] Stopping component System
+[36mDEBUG[0m:    [12-03-2026 20:14:03] Stopping component SegmentAPI
+[36mDEBUG[0m:    [12-03-2026 20:14:03] Stopping component LocalExecutor
+[36mDEBUG[0m:    [12-03-2026 20:14:03] Stopping component PersistentLocalHnswSegment
+[36mDEBUG[0m:    [12-03-2026 20:14:03] Stopping component LocalSegmentManager
+[36mDEBUG[0m:    [12-03-2026 20:14:03] Stopping component SimpleAsyncRateLimitEnforcer
+[36mDEBUG[0m:    [12-03-2026 20:14:03] Stopping component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [12-03-2026 20:14:03] Stopping component Posthog
+[36mDEBUG[0m:    [12-03-2026 20:14:03] Stopping component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [12-03-2026 20:14:03] Stopping component SqliteDB
+[36mDEBUG[0m:    [12-03-2026 20:14:03] Stopping component OpenTelemetryClient
+[32mINFO[0m:     [12-03-2026 20:14:03] Application shutdown complete.
+[32mINFO[0m:     [12-03-2026 20:14:03] Finished server process [[36m99153[0m]

@@ -1,28 +1,19 @@
-import { ChromaClient } from 'chromadb';
+import { Pinecone } from '@pinecone-database/pinecone';
 
-let client: ChromaClient | null = null;
+let pinecone: Pinecone | null = null;
 
-const COLLECTION_NAME = 'rag_documents';
-
-function getClient(): ChromaClient {
-    if (!client) {
-        client = new ChromaClient({
-            host: 'localhost',
-            port: 8000,
-            ssl: false,
+function getClient(): Pinecone {
+    if (!pinecone) {
+        pinecone = new Pinecone({
+            apiKey: process.env.PINECONE_API_KEY!,
         });
     }
-    return client;
+    return pinecone;
 }
 
-export async function getCollection() {
-    const chroma = getClient();
-    return await chroma.getOrCreateCollection({
-        name: COLLECTION_NAME,
-        metadata: { 'hnsw:space': 'cosine' },
-        // 禁用默认 embedding function，我们自己提供向量
-        embeddingFunction: null as any,
-    });
+function getIndex() {
+    // 直接用 host 连接，跳过 describe_index 的网络请求，更快
+    return getClient().index('rag-documents', process.env.PINECONE_HOST);
 }
 
 export async function addDocuments(params: {
@@ -31,28 +22,54 @@ export async function addDocuments(params: {
     documents: string[];
     metadatas: Record<string, string>[];
 }) {
-    const col = await getCollection();
-    await col.add(params);
+    const index = getIndex();
+
+    // Pinecone 的数据格式是 vectors 数组
+    const vectors = params.ids.map((id, i) => ({
+        id,
+        values: params.embeddings[i],
+        metadata: {
+            ...params.metadatas[i],
+            // 把文档内容也存进 metadata，查询时直接取出来
+            text: params.documents[i],
+        },
+    }));
+
+    // Pinecone 建议每批最多 100 条
+    const BATCH_SIZE = 100;
+    for (let i = 0; i < vectors.length; i += BATCH_SIZE) {
+        await index.upsert({ records: vectors.slice(i, i + BATCH_SIZE) });
+    }
 }
 
 export async function queryDocuments(params: {
     embedding: number[];
     nResults: number;
 }): Promise<{ documents: string[]; metadatas: Record<string, string>[]; distances: number[] }> {
-    const col = await getCollection();
-    const results = await col.query({
-        queryEmbeddings: [params.embedding],
-        nResults: params.nResults,
+    const index = getIndex();
+
+    const results = await index.query({
+        vector: params.embedding,
+        topK: params.nResults,
+        includeMetadata: true,
     });
 
+    const matches = results.matches ?? [];
+
     return {
-        documents: results.documents[0] as string[],
-        metadatas: results.metadatas[0] as Record<string, string>[],
-        distances: (results.distances?.[0] ?? []).filter((d): d is number => d !== null),
+        // 从 metadata 里取回文档内容
+        documents: matches.map(m => (m.metadata?.text as string) ?? ''),
+        metadatas: matches.map(m => ({
+            source: (m.metadata?.source as string) ?? '',
+            index: (m.metadata?.index as string) ?? '',
+        })),
+        // Pinecone 返回的是 score（相似度），转成 distance = 1 - score
+        distances: matches.map(m => 1 - (m.score ?? 0)),
     };
 }
 
 export async function deleteCollection(): Promise<void> {
-    const chroma = getClient();
-    await chroma.deleteCollection({ name: COLLECTION_NAME });
+    const index = getIndex();
+    // 删除所有向量
+    await index.deleteAll();
 }
