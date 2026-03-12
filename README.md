@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RAG Assistant — Document Q&A
+
+An AI-powered knowledge base that lets you chat with your documents. Upload files and get accurate answers with source citations powered by RAG (Retrieval-Augmented Generation).
+
+**Live Demo:** [rag-assistant-mu.vercel.app](https://rag-assistant-mu.vercel.app)
+
+## Features
+
+- **Multi-format Upload** — Supports PDF, DOCX, TXT, and MD files
+- **Semantic Search** — Finds relevant content using vector similarity search
+- **Source Citations** — Every answer includes the source document and matching excerpt
+- **Conversation History** — Multi-turn Q&A with context awareness
+- **Drag & Drop** — Upload multiple files at once
+
+## Tech Stack
+
+- **Frontend:** Next.js 14 (App Router), TypeScript
+- **AI:** Claude Haiku via OpenRouter
+- **Embeddings:** all-MiniLM-L6-v2 via OpenRouter
+- **Vector Database:** Pinecone
+- **File Parsing:** unpdf (PDF), mammoth (DOCX)
+- **Deployment:** Vercel
+
+## Architecture
+```
+Upload Flow:
+File → Text Extraction → Chunking (800 chars) → Embedding → Pinecone
+
+Query Flow:
+Question → Embedding → Pinecone Similarity Search → Top 5 Chunks → Claude → Answer + Sources
+```
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js 18+
+- OpenRouter API key → [openrouter.ai](https://openrouter.ai)
+- Pinecone account → [pinecone.io](https://pinecone.io)
 
+### Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/leo0807/rag-assistant
+cd rag-assistant
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create `.env.local`:
+```
+OPENROUTER_API_KEY=your_openrouter_key
+PINECONE_API_KEY=your_pinecone_key
+PINECONE_HOST=your_pinecone_host_url
+```
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How It Works
 
-## Learn More
+1. **Upload** — Files are parsed and split into 800-character chunks with 50-character overlap
+2. **Embed** — Each chunk is converted to a 384-dimensional vector using all-MiniLM-L6-v2
+3. **Store** — Vectors and metadata are stored in Pinecone
+4. **Query** — User questions are embedded and matched against stored vectors via cosine similarity
+5. **Answer** — Top 5 relevant chunks are passed to Claude as context, with source citations returned
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
